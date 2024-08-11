@@ -4,23 +4,31 @@ import (
 	"errors"
 )
 
+// defaultLimit defines default limit value for Stack without limit provided.
 const defaultLimit = 1000
 
 var (
-	ErrFull  = errors.New("the stack reached the limit")
+	// ErrFull indicates that Stack reached its limit and cannot be pushed.
+	ErrFull = errors.New("the stack reached the limit")
+	// ErrEmpty indicates that Stack reached 0 length and cannot be popped.
 	ErrEmpty = errors.New("the stack is empty")
 )
 
+// Stack is a generic implementation for basic data structure stack.
+// Ordering type: LIFO.
 type Stack[T any] struct {
 	elements []T
 	index    int
 	limit    int
 }
 
+// New returns pointer to the created Stack structure with default limit value.
 func New[T any]() *Stack[T] {
 	return NewWithLimit[T](defaultLimit)
 }
 
+// NewWithLimit returns pointer to the created Stack structure with provided limit value.
+// NOTE: Panics if the limit id <= 0.
 func NewWithLimit[T any](limit int) *Stack[T] {
 	if limit <= 0 {
 		panic("not positive limit value")
@@ -28,13 +36,15 @@ func NewWithLimit[T any](limit int) *Stack[T] {
 
 	return &Stack[T]{
 		elements: make([]T, 0, limit),
-		index:    0,
+		index:    -1,
 		limit:    limit,
 	}
 }
 
+// Push adds element into the Stack.
+// Returns ErrFull in case the Stack's limit was reached.
 func (s *Stack[T]) Push(element T) error {
-	if s.limit == s.index {
+	if s.IsFull() {
 		return ErrFull
 	}
 
@@ -44,24 +54,30 @@ func (s *Stack[T]) Push(element T) error {
 	return nil
 }
 
+// MustPush adds element into the Stack.
+// Note: Uses [Stack.Push] and panics in case non-nil error was returned.
 func (s *Stack[T]) MustPush(element T) {
 	if err := s.Push(element); err != nil {
 		panic(err)
 	}
 }
 
+// Pop removes the last element in the Stack, returning it.
+// Returns ErrEmpty in case all elements were popped from the Stack.
 func (s *Stack[T]) Pop() (T, error) {
-	if s.index == 0 {
+	if s.IsEmpty() {
 		return *new(T), ErrEmpty
 	}
 
-	s.index--
 	var element = s.elements[s.index]
 	s.elements = s.elements[:s.index]
+	s.index--
 
 	return element, nil
 }
 
+// MustPop removes the last element in the Stack, returning it.
+// NOTE: Uses [Stack.Pop] and panics in case non-nil error was returned.
 func (s *Stack[T]) MustPop() T {
 	if element, err := s.Pop(); err != nil {
 		panic(err)
@@ -70,18 +86,24 @@ func (s *Stack[T]) MustPop() T {
 	}
 }
 
+// TODO: Add Pick and MustPick methods.
+
+// Len returns the number of elements in the Stack.
 func (s *Stack[T]) Len() int {
-	return s.index
+	return s.index + 1
 }
 
+// Limit returns the maximum allowed number of elements in the Stack.
 func (s *Stack[T]) Limit() int {
 	return s.limit
 }
 
+// IsEmpty returns true if the Stack has no elements, and false otherwise.
 func (s *Stack[T]) IsEmpty() bool {
 	return s.Len() == 0
 }
 
+// IsFull returns true if the Stack cannot be pushed with any element, and false otherwise.
 func (s *Stack[T]) IsFull() bool {
 	return s.Len() == s.Limit()
 }
