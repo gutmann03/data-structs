@@ -62,7 +62,7 @@ func (s *Stack[T]) MustPush(element T) {
 	}
 }
 
-// Pop removes the last element in the Stack, returning it.
+// Pop removes the last inserted element in the Stack, returning it.
 // Returns ErrEmpty in case all elements were popped from the Stack.
 func (s *Stack[T]) Pop() (T, error) {
 	if s.IsEmpty() {
@@ -76,7 +76,7 @@ func (s *Stack[T]) Pop() (T, error) {
 	return element, nil
 }
 
-// MustPop removes the last element in the Stack, returning it.
+// MustPop removes the last inserted element in the Stack, returning it.
 // NOTE: Uses [Stack.Pop] and panics in case non-nil error was returned.
 func (s *Stack[T]) MustPop() T {
 	if element, err := s.Pop(); err != nil {
@@ -86,7 +86,25 @@ func (s *Stack[T]) MustPop() T {
 	}
 }
 
-// TODO: Add Pick and MustPick methods.
+// Pick returns the last inserted element in the Stack, without modifying the Stack.
+// Returns ErrEmpty in case there is no elements in the Stack.
+func (s *Stack[T]) Pick() (T, error) {
+	if s.IsEmpty() {
+		return *new(T), ErrEmpty
+	}
+
+	return s.elements[s.index], nil
+}
+
+// MustPick returns the last inserted element in the Stack, without modifying the Stack.
+// NOTE: Uses [Stack.Pick] and panics in case non-nil error was returned.
+func (s *Stack[T]) MustPick() T {
+	if element, err := s.Pick(); err != nil {
+		panic(err)
+	} else {
+		return element
+	}
+}
 
 // Len returns the number of elements in the Stack.
 func (s *Stack[T]) Len() int {

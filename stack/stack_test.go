@@ -34,6 +34,14 @@ func TestStack(t *testing.T) {
 			{
 				action: func(t *testing.T) {
 					s = stack.NewWithLimit[int](2)
+
+					_, err := s.Pop()
+					assert.ErrorIs(t, err, stack.ErrEmpty)
+					assert.PanicsWithError(t, stack.ErrEmpty.Error(), func() { s.MustPop() })
+
+					_, err = s.Pick()
+					assert.ErrorIs(t, err, stack.ErrEmpty)
+					assert.PanicsWithError(t, stack.ErrEmpty.Error(), func() { s.MustPick() })
 				},
 				length:  0,
 				limit:   2,
@@ -43,6 +51,10 @@ func TestStack(t *testing.T) {
 			{
 				action: func(t *testing.T) {
 					assert.NoError(t, s.Push(1))
+
+					element, err := s.Pick()
+					assert.NoError(t, err)
+					assert.EqualValues(t, element, 1)
 				},
 				length:  1,
 				limit:   2,
@@ -51,7 +63,11 @@ func TestStack(t *testing.T) {
 			},
 			{
 				action: func(t *testing.T) {
-					assert.NoError(t, s.Push(1))
+					assert.NoError(t, s.Push(10))
+
+					element, err := s.Pick()
+					assert.NoError(t, err)
+					assert.EqualValues(t, element, 10)
 				},
 				length:  2,
 				limit:   2,
@@ -84,6 +100,9 @@ func TestStack(t *testing.T) {
 				action: func(t *testing.T) {
 					_, err := s.Pop()
 					assert.ErrorIs(t, err, stack.ErrEmpty)
+
+					_, err = s.Pick()
+					assert.ErrorIs(t, err, stack.ErrEmpty)
 				},
 				length:  0,
 				limit:   2,
@@ -100,11 +119,17 @@ func TestStack(t *testing.T) {
 		}
 	})
 
-	t.Run("Push & Pop", func(t *testing.T) {
+	t.Run("Push & Pop & Pick", func(t *testing.T) {
 		s := stack.NewWithLimit[string](3)
 		s.MustPush("!")
+		assert.EqualValues(t, "!", s.MustPick())
+
 		s.MustPush("world")
+		assert.EqualValues(t, "world", s.MustPick())
+
 		s.MustPush("Hello")
+		assert.EqualValues(t, "Hello", s.MustPick())
+
 		assert.PanicsWithError(t, stack.ErrFull.Error(), func() { s.MustPush("!") })
 		assert.EqualValues(t, 3, s.Len())
 		assert.True(t, s.IsFull())
